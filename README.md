@@ -1,36 +1,35 @@
-# IT-Security Lab: Passwort Brute-Forcing
+# hftm IT-Security Labs 
 
-In diesem Lab lernst du, wie Angreifer ungeschützte Anmeldeschnittstellen automatisiert attackieren und wie man sich als Entwickler dagegen schützt.
+## Allgemeine Voraussetzungen
+
+Bevor du mit den Labs starten kannst, müssen folgende Tools auf deinem Rechner installiert sein:
+1. **Docker Desktop** (Stelle bei Windows sicher, dass das WSL2-Backend aktiviert ist)
+2. **Git**
+3. Eine IDE deiner Wahl
 
 ---
 
-## 1. Lab starten
+## Lab Workflow
 
-Öffne deinen Terminal im Hauptverzeichnis des Repositories (im Ordner `git/`) und führe folgenden Befehl aus:
-
+1. Öffne dein Terminal im Hauptverzeichnis dieses Repositories (`git/`).
+2. Hole dir die neuesten Aufgaben und Updates:
 ```bash
-docker compose --profile brute-force up --build
+   git pull
 ```
+3. Jedes Lab ist in einem separaten Unterordner abgelegt. Dort findest du im README.md auch die Aufgabenbeschreibung.
 
-Rufe danach die Webseite in deinem Browser auf: **[http://localhost:5000](http://localhost:5000)**
+4. Starte das gewünschte Lab mithilfe des Docker-Compose-Profils (siehe Tabelle unten).
+```bash
+   docker compose --profile <labXY> up --build
+```
+5. Im Normalfall wird das Lab jetzt unter **[http://localhost:5000](http://localhost:5000)** erreichbar sein. Solltest du bereits selbst einen Service unter Port 5000 betreiben, kannst du das Port-Mapping in docker-compose.yaml anpassen.
 
 ---
 
-## 2. Angreifen (Offensive)
+## Das 3-Schritte-Prinzip pro Aufgabe
 
-Der Login erlaubt unendlich viele Versuche ohne zeitliche Verzögerung oder Kontosperrung.
+Jedes Lab ist nach demselben didaktischen Prinzip aufgebaut:
 
-* **Deine Aufgabe:** Schreibe ein Python-Skript (z. B. mit der Bibliothek `requests`), das eine Liste gängiger Passwörter automatisiert durchprobiert, bis du erfolgreich eingeloggt wirst und die **FLAG** siehst.
-* **Präsentation:** Halte dein Hacking-Skript und die gefundene Flag für die Präsentation in der nächsten Unterrichtseinheit bereit.
-
----
-
-## 3. Absichern (Defensive)
-
-Wechsle nun in die Rolle des Entwicklers.
-
-* **Deine Aufgabe:** Behebe die Schwachstelle in der Datei `brute-force/main.py` auf deinem Rechner.
-* **Ziel:** Implementiere einen Schutzmechanismus (z. B. eine künstliche Verzögerung bei einem Fehlversuch mit `time.sleep()` oder eine Sperre nach $X$ Versuchen), sodass automatisierte Angriffe extrem verlangsamt oder komplett blockiert werden.
-* **Test:** Überprüfe, ob dein zuvor geschriebenes Hacking-Skript nach deinem Fix fehlschlägt oder blockiert wird.
-
-```
+1. **Lab starten:** Starte den Container über den entsprechenden Profil-Befehl im Terminal.
+2. **Hacking (Offensive):** Analysiere die Anwendung, finde die Schwachstelle und schreibe ein automatisiertes Skript (z. B. in Python), um die **FLAG** (den Erfolgs-Code) zu extrahieren.
+3. **Fixing (Defensive):** Wechsle die Seiten. Optimiere den Quellcode (oft `main.py`) im jeweiligen Unterordner direkt auf deinem Rechner, um die Schwachstelle dauerhaft zu schliessen. Dein Fix wird live in den Container übertragen und bleibt persistent auf deiner Festplatte gespeichert.
