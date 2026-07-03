@@ -6,6 +6,15 @@ Bevor du mit den Labs starten kannst, müssen folgende Tools auf deinem Rechner 
 1. **Docker** (Stelle bei Windows sicher, dass das WSL2-Backend aktiviert ist): [https://www.docker.com/](https://www.docker.com/)
 2. **Git**
 3. Eine IDE deiner Wahl
+4. Git-Repo klonen:
+
+```
+# 1. Repository klonen (via HTTPS oder SSH)
+git clone https://github.com/dobaumann/IN267_IT-Security.git
+
+# 2. In das geklonte Verzeichnis wechseln (Extrem wichtig für das Volume-Mapping!)
+cd IN267_IT-Security
+```
 
 ---
 
