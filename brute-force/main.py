@@ -1,30 +1,16 @@
-from flask import Flask, request, render_template_string
+import hashlib
+from flask import Flask, request, render_template
 
 app = Flask(__name__)
 
-# Der Ziel-Account mit einem Passwort aus den klassischen Top-Listen
-USER_DATABASE = {
-    'admin': 'shadow1' 
-}
+def hash_password(password: str) -> str:
+    return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
-HTML_LOGIN = '''
-<!doctype html>
-<title>Admin Login Portal</title>
-<div style="max-width: 400px; margin: 50px auto; font-family: sans-serif; line-height: 1.5;">
-    <h2>Unternehmens-Admin-Login</h2>
-    <p style="background: #f4f4f4; padding: 10px; border-left: 5px solid #007BFF;">
-        <strong>Mission für Studierende:</strong> Finden Sie das Passwort des Benutzers "admin" heraus. Nutzen Sie dafür ein automatisiertes Skript.
-    </p>
-    <form method="POST">
-      Benutzername: <input type="text" name="username" value="admin" readonly style="background: #eee;"><br><br>
-      Passwort: <input type="password" name="password" autofocus><br><br>
-      <input type="submit" value="Einloggen" style="padding: 5px 15px;">
-    </form>
-    {% if message %}
-        <p style="color: red; font-weight: bold;">{{ message }}</p>
-    {% endif %}
-</div>
-'''
+# Gehashte Passwörter
+USER_DATABASE = {
+    'admin1': '044f07d3e9f586bffda43c444322142ff313fc6f044c5b9ae74db00ab360f706',
+    'admin2': 'a1d8529ac580b2e643526d7fda61bd8e0aa759d64092ad7886129c8eef3cc898'
+}
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -33,13 +19,13 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
         
-        if USER_DATABASE.get(username) == password:
-            return "<h1>FLAG{brut3_f0rc3_succ3ssful_992} - Zugriff gewährt!</h1>"
+        if USER_DATABASE.get(username) == hash_password(password):
+            return f"<h1>Herzlichen Glückwunsch! Zugriff für {username} erfolgreich gewährt.</h1>"
         else:
-            message = "Falsches Passwort!"
+            message = "Ungültige Anmeldedaten. Bitte versuchen Sie es erneut."
+            return render_template('login.html', message=message), 401
             
-    return render_template_string(HTML_LOGIN, message=message)
+    return render_template('login.html', message=message)
 
 if __name__ == '__main__':
-    # host='0.0.0.0' sorgt dafür, dass Flask Verbindungen von außerhalb des Containers annimmt
     app.run(host='0.0.0.0', port=5000, debug=True)
