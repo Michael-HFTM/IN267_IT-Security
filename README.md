@@ -1,5 +1,3 @@
-
-```markdown
 # IT-Security Lab: Passwort Brute-Forcing
 
 In diesem Lab lernst du, wie Angreifer ungeschützte Anmeldeschnittstellen automatisiert attackieren und wie man sich als Entwickler dagegen schützt.
