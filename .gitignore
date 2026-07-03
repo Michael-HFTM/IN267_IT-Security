@@ -1,0 +1,17 @@
+# Python-Spezifisch
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Datenbanken und Lokale States
+*.db
+*.sqlite3
+
+# OS Spezifisch
+.DS_Store
+Thumbs.db
+
+# Docker (falls IDEs spezifische Docker-Configs anlegen)
+.docker/
