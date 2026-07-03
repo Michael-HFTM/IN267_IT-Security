@@ -3,7 +3,7 @@
 ## Allgemeine Voraussetzungen
 
 Bevor du mit den Labs starten kannst, müssen folgende Tools auf deinem Rechner installiert sein:
-1. **Docker Desktop** (Stelle bei Windows sicher, dass das WSL2-Backend aktiviert ist)
+1. **Docker** (Stelle bei Windows sicher, dass das WSL2-Backend aktiviert ist): [https://www.docker.com/](https://www.docker.com/)
 2. **Git**
 3. Eine IDE deiner Wahl
 
@@ -16,7 +16,7 @@ Bevor du mit den Labs starten kannst, müssen folgende Tools auf deinem Rechner 
 ```bash
    git pull
 ```
-3. Jedes Lab ist in einem separaten Unterordner abgelegt. Dort findest du im README.md auch die Aufgabenbeschreibung.
+3. Jedes Lab ist in einem separaten Unterordner abgelegt. **Dort findest du im README.md auch die Aufgabenbeschreibung.**
 
 4. Starte das gewünschte Lab mithilfe des Docker-Compose-Profils (siehe Tabelle unten).
 ```bash
