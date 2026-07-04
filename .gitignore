@@ -15,3 +15,7 @@ Thumbs.db
 
 # Docker (falls IDEs spezifische Docker-Configs anlegen)
 .docker/
+
+# python
+.venv
+.idea
