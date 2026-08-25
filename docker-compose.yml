@@ -8,3 +8,10 @@ services:
       - ./brute-force:/app
     ports:
       - "5000:5000"
+  brute-force-mg:
+      build: .
+      profiles: [ "brute-force-mg" ]
+      volumes:
+        - ./brute-force/defend:/app
+      ports:
+        - "5000:5000"
