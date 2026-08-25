@@ -19,3 +19,6 @@ Thumbs.db
 # python
 .venv
 .idea
+
+# bruteforce
+brute-force/rockyou.txt
