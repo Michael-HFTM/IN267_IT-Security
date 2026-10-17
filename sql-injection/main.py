@@ -53,14 +53,14 @@ def level1():
         username = request.form.get('username')
         password = request.form.get('password')
         
-        # VULNERABLE: Direkte String-Konkatenation
-        query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
-        print(f"[Level 1] Executing Query: {query}")
-        
+        # SICHER: Parametrisiertes Statement (Prepared Statement)
+        query = "SELECT * FROM users WHERE username = ? AND password = ?"
+        print(f"[Level 1] Executing Query: {query} params=({username!r}, ***)")
+
         conn = get_db()
         cursor = conn.cursor()
         try:
-            user = cursor.execute(query).fetchone()
+            user = cursor.execute(query, (username, password)).fetchone()
             if user:
                 return f"<h1>Willkommen im Admin-Panel, {user['username']}!</h1><p>Level 1 bestanden. Flagge: FLAG{{Auth_Byp4ss_Succ3ss}}</p>"
             else:
@@ -78,14 +78,15 @@ def level2():
     error_msg = None
     
     if query_param:
-        # VULNERABLE: String-Konkatenation
-        query = f"SELECT id, name, department, email FROM employees WHERE name LIKE '%{query_param}%'"
-        print(f"[Level 2] Executing Query: {query}")
-        
+        # SICHER: Parametrisiertes Statement. Die Wildcards gehören in den Parameterwert,
+        # nicht in die Query-Struktur.
+        query = "SELECT id, name, department, email FROM employees WHERE name LIKE ?"
+        print(f"[Level 2] Executing Query: {query} param={query_param!r}")
+
         conn = get_db()
         cursor = conn.cursor()
         try:
-            results = cursor.execute(query).fetchall()
+            results = cursor.execute(query, (f"%{query_param}%",)).fetchall()
         except sqlite3.Error as e:
             # Wichtig für Lernzwecke: Fehler dem User anzeigen!
             error_msg = f"SQL Fehler: {e}"
@@ -97,14 +98,14 @@ def level2():
 def level3_api():
     license_key = request.args.get('key', '')
     
-    # VULNERABLE: Blind SQLi. Keine Datenausgabe, keine Fehlerausgabe. Nur True/False.
-    query = f"SELECT 1 FROM licenses WHERE key = '{license_key}' AND valid = 1"
-    print(f"[Level 3] Executing API Query: {query}")
-    
+    # SICHER: Parametrisiertes Statement. Die Eingabe kann die Query-Logik nicht mehr verändern.
+    query = "SELECT 1 FROM licenses WHERE key = ? AND valid = 1"
+    print(f"[Level 3] Executing API Query: {query} param={license_key!r}")
+
     conn = get_db()
     cursor = conn.cursor()
     try:
-        match = cursor.execute(query).fetchone()
+        match = cursor.execute(query, (license_key,)).fetchone()
         if match:
             return jsonify({"status": "success", "message": "Lizenz gültig."})
         else:
