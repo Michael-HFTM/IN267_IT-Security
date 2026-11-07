@@ -1,123 +1,158 @@
-import sqlite3
 import os
-from flask import Flask, request, render_template, jsonify
+import sqlite3
+from datetime import datetime
+from flask import Flask, request, render_template, redirect, url_for, jsonify
 
 app = Flask(__name__)
-DATABASE_PATH = 'sqli.db'
-
-def init_db():
-    """Initialisiert die Datenbank bei jedem Start neu, damit die Studenten immer einen sauberen Zustand haben."""
-    if os.path.exists(DATABASE_PATH):
-        os.remove(DATABASE_PATH)
-        
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-
-    # --- LEVEL 1: Auth Bypass ---
-    cursor.execute('CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT, password TEXT)')
-    cursor.execute("INSERT INTO users (username, password) VALUES ('admin', 'Sup3rS3cr3tP4ssw0rd!')")
-
-    # --- LEVEL 2: UNION-based ---
-    cursor.execute('CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT, department TEXT, email TEXT)')
-    cursor.execute("INSERT INTO employees (name, department, email) VALUES ('Dr. Alice Smith', 'R&D', 'a.smith@faust-electronics.local')")
-    cursor.execute("INSERT INTO employees (name, department, email) VALUES ('Bob Jones', 'HR', 'b.jones@faust-electronics.local')")
-    cursor.execute("INSERT INTO employees (name, department, email) VALUES ('Eve Hacker', 'IT', 'e.hacker@faust-electronics.local')")
-    
-    # Geheime Tabelle, die über UNION ausgelesen werden soll
-    cursor.execute('CREATE TABLE flags_internal (id INTEGER PRIMARY KEY, flag_name TEXT, flag_value TEXT)')
-    cursor.execute("INSERT INTO flags_internal (flag_name, flag_value) VALUES ('UNION_FLAG', 'FLAG{Un10n_M4st3r_2026}')")
-
-    # --- LEVEL 3: Blind SQLi ---
-    cursor.execute('CREATE TABLE licenses (id INTEGER PRIMARY KEY, key TEXT, valid INTEGER)')
-    # Die Flagge IST der Lizenzschlüssel. Studenten müssen ihn Zeichen für Zeichen auslesen.
-    cursor.execute("INSERT INTO licenses (key, valid) VALUES ('FLAG{Bl1nd_SQL1_N1nj4}', 1)")
-
-    conn.commit()
-    conn.close()
+DATABASE_PATH = 'xss.db'
 
 def get_db():
     conn = sqlite3.connect(DATABASE_PATH)
     conn.row_factory = sqlite3.Row
     return conn
 
-# Start-Seite / Navigation
+def init_db():
+    """Initialisiert die Datenbank mit Tabellen und Beispieldaten."""
+    if os.path.exists(DATABASE_PATH):
+        os.remove(DATABASE_PATH)
+        
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # --- LEVEL 1: Support Tickets ---
+    cursor.execute('''
+        CREATE TABLE tickets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            author TEXT,
+            title TEXT,
+            message TEXT,
+            created_at TEXT
+        )
+    ''')
+    cursor.execute('''
+        INSERT INTO tickets (author, title, message, created_at)
+        VALUES ('Bob Jones', 'Drucker offline', 'Der Abteilungsdrucker im 2. OG reagiert nicht.', datetime('now'))
+    ''')
+
+    # --- LEVEL 2: Shop Reviews ---
+    cursor.execute('''
+        CREATE TABLE reviews (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            author TEXT,
+            rating INTEGER,
+            content TEXT,
+            created_at TEXT
+        )
+    ''')
+    cursor.execute('''
+        INSERT INTO reviews (author, rating, content, created_at)
+        VALUES ('Dr. Alice Smith', 5, 'Hervorragender Lötkolben! Schnelle Aufheizzeit und präzise Temperatur.', datetime('now'))
+    ''')
+
+    # --- ANGREIFER-POSTFACH (Catcher) ---
+    cursor.execute('''
+        CREATE TABLE mailbox (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            received_at TEXT,
+            username TEXT,
+            password TEXT,
+            raw_data TEXT
+        )
+    ''')
+
+    conn.commit()
+    conn.close()
+
+# --- NAVIGATION ---
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# --- LEVEL 1: Auth Bypass ---
+# --- LEVEL 1: Support-Ticket-System (Stored XSS PoC) ---
 @app.route('/level1', methods=['GET', 'POST'])
 def level1():
-    message = None
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        
-        # VULNERABLE: Direkte String-Konkatenation
-        query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
-        print(f"[Level 1] Executing Query: {query}")
-        
-        conn = get_db()
-        cursor = conn.cursor()
-        try:
-            user = cursor.execute(query).fetchone()
-            if user:
-                return f"<h1>Willkommen im Admin-Panel, {user['username']}!</h1><p>Level 1 bestanden. Flagge: FLAG{{Auth_Byp4ss_Succ3ss}}</p>"
-            else:
-                message = "Ungültige Anmeldedaten. Bitte versuchen Sie es erneut."
-        except sqlite3.Error as e:
-            message = f"Datenbankfehler: {e}"
-            
-    return render_template('level1.html', message=message)
-
-# --- LEVEL 2: UNION-based SQLi ---
-@app.route('/level2', methods=['GET'])
-def level2():
-    query_param = request.args.get('q', '')
-    results = None
-    error_msg = None
-    
-    if query_param:
-        # VULNERABLE: String-Konkatenation
-        query = f"SELECT id, name, department, email FROM employees WHERE name LIKE '%{query_param}%'"
-        print(f"[Level 2] Executing Query: {query}")
-        
-        conn = get_db()
-        cursor = conn.cursor()
-        try:
-            results = cursor.execute(query).fetchall()
-        except sqlite3.Error as e:
-            # Wichtig für Lernzwecke: Fehler dem User anzeigen!
-            error_msg = f"SQL Fehler: {e}"
-            
-    return render_template('level2.html', results=results, query=query_param, error=error_msg)
-
-# --- LEVEL 3: Blind SQLi ---
-@app.route('/level3/api/check-license', methods=['GET'])
-def level3_api():
-    license_key = request.args.get('key', '')
-    
-    # VULNERABLE: Blind SQLi. Keine Datenausgabe, keine Fehlerausgabe. Nur True/False.
-    query = f"SELECT 1 FROM licenses WHERE key = '{license_key}' AND valid = 1"
-    print(f"[Level 3] Executing API Query: {query}")
-    
     conn = get_db()
     cursor = conn.cursor()
-    try:
-        match = cursor.execute(query).fetchone()
-        if match:
-            return jsonify({"status": "success", "message": "Lizenz gültig."})
-        else:
-            return jsonify({"status": "error", "message": "Lizenz ungültig."})
-    except sqlite3.Error:
-        # Fehler werden absichtlich unterdrückt!
-        return jsonify({"status": "error", "message": "Lizenz ungültig."})
 
-@app.route('/level3')
-def level3_ui():
-    return render_template('level3.html')
+    if request.method == 'POST':
+        author = request.form.get('author', 'Anonym')
+        title = request.form.get('title', '')
+        message = request.form.get('message', '')
+        
+        cursor.execute(
+            'INSERT INTO tickets (author, title, message, created_at) VALUES (?, ?, ?, datetime("now"))',
+            (author, title, message)
+        )
+        conn.commit()
+        return redirect(url_for('level1'))
+
+    tickets = cursor.execute('SELECT * FROM tickets ORDER BY id DESC').fetchall()
+    conn.close()
+    return render_template('level1.html', tickets=tickets)
+
+@app.route('/level1/reset', methods=['POST'])
+def level1_reset():
+    init_db()
+    return redirect(url_for('level1'))
+
+# --- LEVEL 2: Webshop Review & Phishing ---
+@app.route('/level2', methods=['GET', 'POST'])
+def level2():
+    conn = get_db()
+    cursor = conn.cursor()
+
+    if request.method == 'POST':
+        author = request.form.get('author', 'Kunde')
+        rating = request.form.get('rating', 5)
+        content = request.form.get('content', '')
+
+        cursor.execute(
+            'INSERT INTO reviews (author, rating, content, created_at) VALUES (?, ?, ?, datetime("now"))',
+            (author, rating, content)
+        )
+        conn.commit()
+        return redirect(url_for('level2'))
+
+    reviews = cursor.execute('SELECT * FROM reviews ORDER BY id DESC').fetchall()
+    conn.close()
+    return render_template('level2.html', reviews=reviews)
+
+@app.route('/level2/reset', methods=['POST'])
+def level2_reset():
+    init_db()
+    return redirect(url_for('level2'))
+
+# --- API CATCHER (Empfängt erbeutete Login-Daten) ---
+@app.route('/api/collect', methods=['GET', 'POST'])
+def api_collect():
+    username = request.values.get('username', '')
+    password = request.values.get('password', '')
+    raw_data = str(request.values.to_dict()) if request.values else request.get_data(as_text=True)
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        'INSERT INTO mailbox (received_at, username, password, raw_data) VALUES (datetime("now"), ?, ?, ?)',
+        (username, password, raw_data)
+    )
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "status": "success",
+        "message": "Daten erfolgreich abgefangen!"
+    }), 200
+
+# --- POSTFACH DES ANGREIFERS ---
+@app.route('/mailbox')
+def mailbox():
+    conn = get_db()
+    cursor = conn.cursor()
+    entries = cursor.execute('SELECT * FROM mailbox ORDER BY id DESC').fetchall()
+    conn.close()
+    return render_template('mailbox.html', entries=entries)
 
 if __name__ == '__main__':
     init_db()
-    print("Datenbank initialisiert.")
+    print("XSS-Lab initialisiert auf Port 5002.")
     app.run(host='0.0.0.0', port=5000, debug=True)

@@ -16,3 +16,11 @@ services:
       - ./sql-injection:/app
     ports:
       - "5001:5000" 
+
+  xss-lab:
+    build: .
+    profiles: ["xss"]
+    volumes:
+      - ./xss:/app
+    ports:
+      - "5002:5000"
