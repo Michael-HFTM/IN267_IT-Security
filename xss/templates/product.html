@@ -40,8 +40,8 @@
     <!-- LEVEL 2: REFLECTED XSS SENKE -->
     {% if ref_param %}
         <div class="ref-banner">
-            <!-- VULNERABLE LEVEL 2: Server spiegelt ref_param ungefiltert wider -->
-            Empfohlen über Partner-Aktion: <strong>{{ ref_param | safe }}</strong>
+            <!-- FIX LEVEL 2: Auto-Escaping von Jinja2 greift wieder (kein | safe) -->
+            Empfohlen über Partner-Aktion: <strong>{{ ref_param }}</strong>
         </div>
     {% endif %}
 
@@ -64,8 +64,8 @@
     {% for review in reviews %}
         <div class="review-card">
             <div class="review-meta"><strong>{{ review.author }}</strong> am {{ review.created_at }}</div>
-            <!-- VULNERABLE LEVEL 1: Ungefilterte Ausgabe via '| safe' -->
-            <div>{{ review.content | safe }}</div>
+            <!-- FIX LEVEL 1: Auto-Escaping von Jinja2 greift wieder (kein | safe) -->
+            <div>{{ review.content }}</div>
         </div>
     {% endfor %}
 
@@ -96,8 +96,11 @@
         const payload = decodeURIComponent(hash.substring(5));
         const domContainer = document.getElementById('dom-banner');
         if (domContainer) {
-            // VULNERABLE LEVEL 3: Direkte Zuweisung an .innerHTML ohne Sanitizing
-            domContainer.innerHTML = '<div style="background:#fff3cd; border-left:4px solid #ffc107; padding:12px;">Partner-Aktion (DOM): ' + payload + '</div>';
+            // FIX LEVEL 3: Safe Sink .textContent statt .innerHTML -> payload wird als Text behandelt, kein HTML-Parsing
+            const banner = document.createElement('div');
+            banner.style.cssText = 'background:#fff3cd; border-left:4px solid #ffc107; padding:12px;';
+            banner.textContent = 'Partner-Aktion (DOM): ' + payload;
+            domContainer.appendChild(banner);
         }
     }
 </script>
