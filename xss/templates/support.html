@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <title>Support-Anfrage - Faust Electronics</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 40px; background: #f4f6f9; color: #333; }
+        .container { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); max-width: 700px; margin: auto; }
+        h1 { color: #0056b3; border-bottom: 2px solid #0056b3; padding-bottom: 10px; margin-top: 0; }
+        .nav { margin-bottom: 20px; }
+        .nav a { color: #0056b3; text-decoration: none; }
+        textarea { width: 100%; padding: 10px; margin: 8px 0 15px 0; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box; }
+        button { padding: 12px 20px; background: #0056b3; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; font-size: 15px; }
+        button:hover { background: #004494; }
+        .hint { background: #e8f4fd; border-left: 4px solid #0056b3; padding: 12px; margin-bottom: 20px; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="nav"><a href="/">&larr; Zurück</a></div>
+    <h1>Support kontaktieren</h1>
+
+    <form method="POST">
+        <label>Nachricht an den Support</label>
+        <textarea name="message" rows="6" placeholder="Sehr geehrtes Support-Team, bitte prüfen Sie den Fehler auf dieser Seite: http://localhost:5002/product?ref=..." required></textarea>
+
+        <button type="submit">Ticket an Support absenden</button>
+    </form>
+</div>
+</body>
+</html>
